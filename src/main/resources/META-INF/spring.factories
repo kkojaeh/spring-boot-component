@@ -1,0 +1,2 @@
+org.springframework.boot.env.EnvironmentPostProcessor=kkojaeh.spring.boot.component.SpringBootComponentEnvironmentPostProcessor
+org.springframework.context.ApplicationContextInitializer=kkojaeh.spring.boot.component.SpringBootComponentApplicationContextInitializer

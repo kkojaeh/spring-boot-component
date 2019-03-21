@@ -1,0 +1,20 @@
+todo: job 1
+
+spring:
+  banner:
+    location: classpath:todo/banner.txt
+  messages:
+    basename: todo/messages
+  datasource:
+    name: todo-pool
+    url: jdbc:hsqldb:mem:todo
+    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+    username: as
+    password: null
+    hikari:
+      maximum-pool-size: 4
+
+logging:
+  level:
+    org:
+      springframework: INFO

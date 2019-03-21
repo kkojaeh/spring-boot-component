@@ -1,0 +1,16 @@
+abc: hello
+
+spring:
+  banner:
+    location: classpath:parent/chained-transaction/banner.txt
+  messages:
+    basename: todo/messages,parent/chained-transaction/messages
+  data:
+    jpa:
+      repositories:
+        enabled: false
+
+logging:
+  level:
+    org:
+      springframework: INFO

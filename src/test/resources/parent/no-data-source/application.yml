@@ -1,0 +1,16 @@
+abc: hello
+
+spring:
+  banner:
+    location: classpath:parent/no-data-source/banner.txt
+  messages:
+    basename: todo/messages,parent/no-data-source/messages
+  data:
+    jpa:
+      repositories:
+        enabled: false
+
+logging:
+  level:
+    org:
+      springframework: INFO

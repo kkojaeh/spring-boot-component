@@ -1,0 +1,24 @@
+abc: hello
+
+spring:
+  banner:
+    location: classpath:parent/one-data-source/banner.txt
+  messages:
+    basename: todo/messages,parent/one-data-source/messages
+  data:
+    jpa:
+      repositories:
+        enabled: false
+  datasource:
+    name: parent-pool
+    url: jdbc:hsqldb:mem:parent
+    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+    username: as
+    password: null
+    hikari:
+      maximum-pool-size: 4
+
+logging:
+  level:
+    org:
+      springframework: INFO

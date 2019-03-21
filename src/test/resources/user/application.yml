@@ -1,0 +1,21 @@
+user:
+  name: mixer
+
+spring:
+  banner:
+    location: classpath:user/banner.txt
+  messages:
+    basename: user/messages
+  datasource:
+    name: user-pool
+    url: jdbc:hsqldb:mem:user
+    driver-class-name: org.hsqldb.jdbc.JDBCDriver
+    username: as
+    password: null
+    hikari:
+      maximum-pool-size: 4
+
+logging:
+  level:
+    org:
+      springframework: INFO
