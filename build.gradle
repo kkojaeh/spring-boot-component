@@ -79,16 +79,15 @@ release {
   versionPropertyFile = 'gradle.properties'
   versionProperties = []
   buildTasks = ['build']
-  scmAdapters = [
-    net.researchgate.release.GitAdapter
-  ]
+  release {
+    scmAdapters = [net.researchgate.release.GitAdapter]
+  }
 
   git {
     requireBranch = 'master'
     pushToRemote = 'origin'
     pushToBranchPrefix = ''
     commitVersionFileOnly = false
-    signTag = false
   }
 
 }
