@@ -59,6 +59,11 @@ bootJar{
   enabled = false
 }
 
+jar{
+  enabled = true
+}
+
+
 release {
   failOnCommitNeeded = true
   failOnPublishNeeded = true
