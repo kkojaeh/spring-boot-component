@@ -23,8 +23,8 @@ class OneDataSourceApplicationTests(val parent: ConfigurableApplicationContext) 
   @PostConstruct
   fun init() {
     SpringBootComponentBuilder(parent)
-      .add(TodoModuleApplication::class.java)
-      .add(UserModuleApplication::class.java)
+      .component(TodoModuleApplication::class.java)
+      .component(UserModuleApplication::class.java)
       .run()
   }
 

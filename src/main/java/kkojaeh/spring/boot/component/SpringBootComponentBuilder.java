@@ -12,8 +12,13 @@ import lombok.val;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.builder.SpringApplicationBuilder;
 import org.springframework.context.ConfigurableApplicationContext;
+import org.springframework.context.annotation.Configuration;
 
 public class SpringBootComponentBuilder {
+
+  public SpringBootComponentBuilder() {
+    this(NoOpParent.class);
+  }
 
   private final List<Class<?>> units = new LinkedList<>();
 
@@ -24,6 +29,14 @@ public class SpringBootComponentBuilder {
   private boolean parallel = true;
 
   private int parallelSize = 10;
+
+  public SpringBootComponentBuilder component(Class<?> source) {
+    if (units.contains(source)) {
+      throw new RuntimeException(String.format("%s is already exists", source.getName()));
+    }
+    units.add(source);
+    return this;
+  }
 
   public SpringBootComponentBuilder(Class<?> parent) {
     this.parent = parent;
@@ -43,12 +56,9 @@ public class SpringBootComponentBuilder {
     return this;
   }
 
-  public SpringBootComponentBuilder add(Class<?> source) {
-    if (units.contains(source)) {
-      throw new RuntimeException(String.format("%s is already exists", source.getName()));
-    }
-    units.add(source);
-    return this;
+  @Configuration
+  public static class NoOpParent {
+
   }
 
   @SneakyThrows
