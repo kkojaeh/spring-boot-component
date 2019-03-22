@@ -68,8 +68,6 @@ public class SpringBootComponentBuilder {
       parentContext = SpringApplication.run(parent, args);
     }
 
-    parentContext.addApplicationListener(e -> System.out.println(e.getClass().getName()));
-
     val contexts = new HashMap<Class<?>, ConfigurableApplicationContext>();
     if (parallel) {
       ForkJoinPool forkjoinPool = new ForkJoinPool(parallelSize);

@@ -12,6 +12,8 @@ import org.springframework.core.type.classreading.SimpleMetadataReaderFactory;
 
 public class SpringBootComponentEnvironmentPostProcessor implements EnvironmentPostProcessor, Ordered {
 
+  public static final String MODULE_NAME_PROPERTY = "spring.module.name";
+
   @Override
   public int getOrder() {
     return ConfigFileApplicationListener.DEFAULT_ORDER - 1;
@@ -25,7 +27,7 @@ public class SpringBootComponentEnvironmentPostProcessor implements EnvironmentP
 
     String bootModuleName = null;
 
-    for (Object source : application.getSources()) {
+    for (Object source : application.getAllSources()) {
       if (!(source instanceof Class)) {
         continue;
       }
@@ -45,7 +47,7 @@ public class SpringBootComponentEnvironmentPostProcessor implements EnvironmentP
           if (value != null) {
             if (bootModuleName != null) {
               throw new RuntimeException(String
-                .format("boot component name duplicated: '%s', '%s'", bootModuleName,
+                .format("boot module name duplicated: '%s', '%s'", bootModuleName,
                   value.toString()));
             } else {
               bootModuleName = value.toString();

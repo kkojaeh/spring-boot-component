@@ -1,12 +1,12 @@
 package kkojaeh.parent.nodatasource
 
 import kkojaeh.spring.boot.component.SpringBootComponent
-import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
+import org.springframework.boot.runApplication
 
 @SpringBootComponent("parent/no-data-source")
 @SpringBootApplication(exclude = [
@@ -17,5 +17,5 @@ import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfigurat
 class NoDataSourceParentApplication
 
 fun main(args: Array<String>) {
-  SpringApplication.run(NoDataSourceParentApplication::class, *args)
+  runApplication<NoDataSourceParentApplication>(*args)
 }
