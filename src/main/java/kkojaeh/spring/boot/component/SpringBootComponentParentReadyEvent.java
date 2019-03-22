@@ -6,16 +6,16 @@ import org.springframework.context.ConfigurableApplicationContext;
 
 public class SpringBootComponentParentReadyEvent extends ApplicationEvent {
 
-  private final Set<ConfigurableApplicationContext> units;
+  private final Set<ConfigurableApplicationContext> components;
 
   public SpringBootComponentParentReadyEvent(ConfigurableApplicationContext parent,
-    Set<ConfigurableApplicationContext> modules) {
+    Set<ConfigurableApplicationContext> components) {
     super(parent);
-    this.units = modules;
+    this.components = components;
   }
 
-  public Set<ConfigurableApplicationContext> getUnits() {
-    return units;
+  public Set<ConfigurableApplicationContext> getComponents() {
+    return components;
   }
 
   public ConfigurableApplicationContext getParent() {

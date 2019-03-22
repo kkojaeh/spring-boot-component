@@ -26,15 +26,15 @@ class ChainedTransactionParentApplication : ApplicationListener<SpringBootCompon
   override fun onApplicationEvent(event: SpringBootComponentParentReadyEvent) {
     val builder = BeanDefinitionBuilder.rootBeanDefinition(ChainedTransactionManager::class.java)
 
-    fun toPlatformTransactionManager(module: ConfigurableApplicationContext): PlatformTransactionManager? {
-      if (module.getBeanNamesForType(PlatformTransactionManager::class.java).isNotEmpty()) {
-        return module.getBean(PlatformTransactionManager::class.java)
+    fun toPlatformTransactionManager(component: ConfigurableApplicationContext): PlatformTransactionManager? {
+      if (component.getBeanNamesForType(PlatformTransactionManager::class.java).isNotEmpty()) {
+        return component.getBean(PlatformTransactionManager::class.java)
       }
       return null
     }
 
-    val transactionManagers = event.units.map { module ->
-      toPlatformTransactionManager(module)
+    val transactionManagers = event.components.map { component ->
+      toPlatformTransactionManager(component)
     }.filter { it != null }.toTypedArray()
 
 
@@ -42,10 +42,6 @@ class ChainedTransactionParentApplication : ApplicationListener<SpringBootCompon
     val beanDefinition = builder.beanDefinition
     beanDefinition.isPrimary = true
     (event.parent as BeanDefinitionRegistry).registerBeanDefinition("chainedTransactionManager", beanDefinition)
-    /*event.modules.forEach { module ->
-        (module as BeanDefinitionRegistry).registerBeanDefinition("chainedTransactionManager", beanDefinition)
-    }*/
-
   }
 
 }

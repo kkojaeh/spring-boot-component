@@ -22,7 +22,7 @@ import org.springframework.core.env.MapPropertySource;
 @RequiredArgsConstructor
 public class SpringBootComponentDefinition {
 
-  private static final String MODULE_DEFINITION_PROPERTY = "spring.module.definition";
+  private static final String COMPONENT_DEFINITION_PROPERTY = "spring.component.definition";
 
   @NonNull
   @Getter
@@ -34,7 +34,7 @@ public class SpringBootComponentDefinition {
 
   public static SpringBootComponentDefinition from(ConfigurableApplicationContext context) {
     return context.getEnvironment()
-      .getProperty(MODULE_DEFINITION_PROPERTY, SpringBootComponentDefinition.class);
+      .getProperty(COMPONENT_DEFINITION_PROPERTY, SpringBootComponentDefinition.class);
   }
 
   public static List<SpringBootComponentDefinition> sort(
@@ -108,9 +108,9 @@ public class SpringBootComponentDefinition {
     Map<String, Object> map = new HashMap<>();
     map.put(ConfigFileApplicationListener.CONFIG_LOCATION_PROPERTY,
       String.format("classpath:/%s/", name));
-    map.put(MODULE_DEFINITION_PROPERTY, this);
+    map.put(COMPONENT_DEFINITION_PROPERTY, this);
     environment.getPropertySources().addFirst(
-      new MapPropertySource("module-property-source", map)
+      new MapPropertySource("component-property-source", map)
     );
 
   }

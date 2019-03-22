@@ -20,7 +20,7 @@ public class SpringBootComponentBuilder {
     this(NoOpParent.class);
   }
 
-  private final List<Class<?>> units = new LinkedList<>();
+  private final List<Class<?>> components = new LinkedList<>();
 
   private Class<?> parent;
 
@@ -31,10 +31,10 @@ public class SpringBootComponentBuilder {
   private int parallelSize = 10;
 
   public SpringBootComponentBuilder component(Class<?> source) {
-    if (units.contains(source)) {
+    if (components.contains(source)) {
       throw new RuntimeException(String.format("%s is already exists", source.getName()));
     }
-    units.add(source);
+    components.add(source);
     return this;
   }
 
@@ -72,29 +72,29 @@ public class SpringBootComponentBuilder {
     if (parallel) {
       ForkJoinPool forkjoinPool = new ForkJoinPool(parallelSize);
       forkjoinPool.submit(() -> {
-        units.parallelStream()
-          .forEach(module ->
-            contexts.put(module,
-              new SpringApplicationBuilder(module)
+        components.parallelStream()
+          .forEach(component ->
+            contexts.put(component,
+              new SpringApplicationBuilder(component)
                 .parent(parentContext)
                 .run(args))
           );
       }).get();
     } else {
-      units.forEach(module ->
-        contexts.put(module,
-          new SpringApplicationBuilder(module)
+      components.forEach(component ->
+        contexts.put(component,
+          new SpringApplicationBuilder(component)
             .parent(parentContext)
             .run(args))
       );
     }
 
-    val unitSet = new HashSet<ConfigurableApplicationContext>(contexts.values());
+    val componentSet = new HashSet<ConfigurableApplicationContext>(contexts.values());
     val parentEvent = new SpringBootComponentParentReadyEvent(parentContext,
-      Collections.unmodifiableSet(unitSet));
+      Collections.unmodifiableSet(componentSet));
     parentContext.publishEvent(parentEvent);
     val definitions = new HashMap<SpringBootComponentDefinition, ConfigurableApplicationContext>();
-    unitSet.forEach(context -> {
+    componentSet.forEach(context -> {
       definitions.put(SpringBootComponentDefinition.from(context), context);
     });
 
