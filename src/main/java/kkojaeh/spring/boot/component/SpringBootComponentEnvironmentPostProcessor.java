@@ -27,7 +27,7 @@ public class SpringBootComponentEnvironmentPostProcessor implements EnvironmentP
 
     String bootModuleName = null;
 
-    for (Object source : application.getAllSources()) {
+    for (Object source : application.getSources()) {
       if (!(source instanceof Class)) {
         continue;
       }

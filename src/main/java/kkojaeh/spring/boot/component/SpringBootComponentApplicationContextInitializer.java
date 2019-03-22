@@ -8,7 +8,7 @@ import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.target.SingletonTargetSource;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
-import org.springframework.boot.context.event.ApplicationStartedEvent;
+import org.springframework.boot.context.event.ApplicationReadyEvent;
 import org.springframework.context.ApplicationContextInitializer;
 import org.springframework.context.ApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -36,7 +36,8 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
       beanFactory.setAutowireCandidateResolver(
         new TakeContextAnnotationAutowireCandidateResolver(definition));
     }
-    applicationContext.addApplicationListener(new GaveBeanDetectApplicationListener(definition));
+    applicationContext.addApplicationListener(
+      new GaveBeanDetectApplicationListener(applicationContext, definition));
   }
 
   @RequiredArgsConstructor
@@ -77,14 +78,16 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
 
   @RequiredArgsConstructor
   public class GaveBeanDetectApplicationListener implements
-    ApplicationListener<ApplicationStartedEvent> {
+    ApplicationListener<ApplicationReadyEvent> {
+
+    @NonNull
+    private final ConfigurableApplicationContext applicationContext;
 
     @NonNull
     private final SpringBootComponentDefinition definition;
 
     @Override
-    public void onApplicationEvent(ApplicationStartedEvent event) {
-      val applicationContext = event.getApplicationContext();
+    public void onApplicationEvent(ApplicationReadyEvent event) {
       val parentContext = (ConfigurableApplicationContext) applicationContext
         .getParent();
       if (parentContext == null) {
