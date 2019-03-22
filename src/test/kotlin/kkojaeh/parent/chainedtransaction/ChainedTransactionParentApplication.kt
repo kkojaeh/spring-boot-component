@@ -4,12 +4,12 @@ import kkojaeh.spring.boot.component.SpringBootComponent
 import kkojaeh.spring.boot.component.SpringBootComponentParentReadyEvent
 import org.springframework.beans.factory.support.BeanDefinitionBuilder
 import org.springframework.beans.factory.support.BeanDefinitionRegistry
+import org.springframework.boot.SpringApplication
 import org.springframework.boot.autoconfigure.SpringBootApplication
 import org.springframework.boot.autoconfigure.data.jpa.JpaRepositoriesAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceAutoConfiguration
 import org.springframework.boot.autoconfigure.jdbc.DataSourceTransactionManagerAutoConfiguration
 import org.springframework.boot.autoconfigure.orm.jpa.HibernateJpaAutoConfiguration
-import org.springframework.boot.runApplication
 import org.springframework.context.ApplicationListener
 import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.data.transaction.ChainedTransactionManager
@@ -47,5 +47,5 @@ class ChainedTransactionParentApplication : ApplicationListener<SpringBootCompon
 }
 
 fun main(args: Array<String>) {
-  runApplication<ChainedTransactionParentApplication>(*args)
+  SpringApplication.run(ChainedTransactionParentApplication::class, *args)
 }
