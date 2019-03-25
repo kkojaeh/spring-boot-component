@@ -1,7 +1,7 @@
 package kkojaeh.test
 
 import kkojaeh.parent.chainedtransaction.ChainedTransactionParentApplication
-import kkojaeh.spring.boot.component.SpringBootComponentBuilder
+import kkojaeh.spring.boot.component.SpringBootTestComponent
 import kkojaeh.spring.boot.component.Take
 import kkojaeh.todo.TodoModuleApplication
 import kkojaeh.todo.TodoService
@@ -9,29 +9,20 @@ import kkojaeh.user.UserModuleApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.test.annotation.Rollback
 import org.springframework.test.context.ActiveProfiles
 import org.springframework.test.context.junit.jupiter.SpringExtension
 import org.springframework.transaction.annotation.Transactional
-import javax.annotation.PostConstruct
 
 @ExtendWith(SpringExtension::class)
 @ComponentScan(useDefaultFilters = false)
 @SpringBootTest(classes = [ChainedTransactionParentApplication::class])
+@SpringBootTestComponent(classes = [TodoModuleApplication::class, UserModuleApplication::class])
 @Transactional
 @Rollback
 @ActiveProfiles("test")
-class ChainedTransactionApplicationTests(val parent: ConfigurableApplicationContext) {
-
-  @PostConstruct
-  fun init() {
-    SpringBootComponentBuilder(parent)
-      .component(TodoModuleApplication::class.java)
-      .component(UserModuleApplication::class.java)
-      .run()
-  }
+class ChainedTransactionApplicationTests {
 
   @Take
   lateinit var todoService: TodoService

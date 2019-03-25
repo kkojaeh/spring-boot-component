@@ -1,7 +1,7 @@
 package kkojaeh.test
 
 import kkojaeh.parent.onedatasource.OneDataSourceParentApplication
-import kkojaeh.spring.boot.component.SpringBootComponentBuilder
+import kkojaeh.spring.boot.component.SpringBootTestComponent
 import kkojaeh.spring.boot.component.Take
 import kkojaeh.todo.TodoModuleApplication
 import kkojaeh.todo.TodoService
@@ -9,23 +9,14 @@ import kkojaeh.user.UserModuleApplication
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import org.springframework.boot.test.context.SpringBootTest
-import org.springframework.context.ConfigurableApplicationContext
 import org.springframework.context.annotation.ComponentScan
 import org.springframework.test.context.junit.jupiter.SpringExtension
-import javax.annotation.PostConstruct
 
 @ExtendWith(SpringExtension::class)
 @ComponentScan(useDefaultFilters = false)
 @SpringBootTest(classes = [OneDataSourceParentApplication::class])
-class OneDataSourceApplicationTests(val parent: ConfigurableApplicationContext) {
-
-  @PostConstruct
-  fun init() {
-    SpringBootComponentBuilder(parent)
-      .component(TodoModuleApplication::class.java)
-      .component(UserModuleApplication::class.java)
-      .run()
-  }
+@SpringBootTestComponent(classes = [TodoModuleApplication::class, UserModuleApplication::class])
+class OneDataSourceApplicationTests {
 
   @Take
   lateinit var todoService: TodoService
