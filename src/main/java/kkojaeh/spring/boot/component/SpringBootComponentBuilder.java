@@ -7,6 +7,7 @@ import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.boot.SpringApplication;
@@ -46,12 +47,12 @@ public class SpringBootComponentBuilder {
     this.parentContext = parent;
   }
 
-  public SpringBootComponentBuilder parallel(boolean parallel){
+  public SpringBootComponentBuilder parallel(boolean parallel) {
     this.parallel = parallel;
     return this;
   }
 
-  public SpringBootComponentBuilder parallelSize(int parallelSize){
+  public SpringBootComponentBuilder parallelSize(int parallelSize) {
     this.parallelSize = parallelSize;
     return this;
   }
@@ -90,13 +91,36 @@ public class SpringBootComponentBuilder {
     }
 
     val componentSet = new HashSet<ConfigurableApplicationContext>(contexts.values());
+    val definitions = new HashMap<SpringBootComponentDefinition, ConfigurableApplicationContext>();
+    componentSet.forEach(context -> {
+      val definition = SpringBootComponentDefinition.from(context);
+      definitions.put(definition, context);
+    });
+
+    definitions.forEach((definition, context) -> {
+      val siblings = componentSet.stream()
+        .filter(c -> !c.equals(context))
+        .collect(Collectors.toSet());
+
+      definition.getBeans().forEach(bean -> {
+        siblings.forEach(c -> {
+          val beanFactory = c.getBeanFactory();
+          beanFactory.registerSingleton(
+            String.format("%s/%s", definition.getName(), bean.getName()),
+            bean.getInstance()
+          );
+        });
+        parentContext.getBeanFactory().registerSingleton(
+          String.format("%s/%s", definition.getName(), bean.getName()),
+          bean.getInstance()
+        );
+      });
+
+    });
+
     val parentEvent = new SpringBootComponentParentReadyEvent(parentContext,
       Collections.unmodifiableSet(componentSet));
     parentContext.publishEvent(parentEvent);
-    val definitions = new HashMap<SpringBootComponentDefinition, ConfigurableApplicationContext>();
-    componentSet.forEach(context -> {
-      definitions.put(SpringBootComponentDefinition.from(context), context);
-    });
 
     val sortedUnits = SpringBootComponentDefinition.sort(definitions.keySet());
     sortedUnits.forEach(definition -> {

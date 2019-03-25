@@ -12,6 +12,7 @@ import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
+import lombok.Value;
 import lombok.val;
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -31,6 +32,9 @@ public class SpringBootComponentDefinition {
   private final Set<Class<?>> takes = new HashSet<>();
 
   private final Set<Class<?>> gives = new HashSet<>();
+
+  @Getter
+  private final Set<Bean> beans = new HashSet<>();
 
   public static SpringBootComponentDefinition from(ConfigurableApplicationContext context) {
     return context.getEnvironment()
@@ -104,6 +108,10 @@ public class SpringBootComponentDefinition {
     takes.add(take);
   }
 
+  public void addBean(String name, Object instance) {
+    beans.add(new Bean(name, instance));
+  }
+
   public void to(ConfigurableEnvironment environment) {
     Map<String, Object> map = new HashMap<>();
     map.put(ConfigFileApplicationListener.CONFIG_LOCATION_PROPERTY,
@@ -112,6 +120,15 @@ public class SpringBootComponentDefinition {
     environment.getPropertySources().addFirst(
       new MapPropertySource("component-property-source", map)
     );
+
+  }
+
+  @Value
+  public static class Bean {
+
+    String name;
+
+    Object instance;
 
   }
 

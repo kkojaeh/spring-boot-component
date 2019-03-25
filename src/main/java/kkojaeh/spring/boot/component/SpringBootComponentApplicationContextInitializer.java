@@ -111,8 +111,10 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
         if (!bean.getClass().isEnum()) {
           bean = ProxyFactory.getProxy(new SingletonTargetSource(bean));
         }
+        definition.addBean(name, bean);
+        /*
         parentContext.getBeanFactory()
-          .registerSingleton(String.format("%s/%s", definition.getName(), name), bean);
+          .registerSingleton(String.format("%s/%s", definition.getName(), name), bean);*/
       });
 
       applicationContext.getBean(ApplicationEventMulticaster.class)

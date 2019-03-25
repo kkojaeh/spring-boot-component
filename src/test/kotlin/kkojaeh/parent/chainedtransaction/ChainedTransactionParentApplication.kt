@@ -24,8 +24,6 @@ import org.springframework.transaction.PlatformTransactionManager
 class ChainedTransactionParentApplication : ApplicationListener<SpringBootComponentParentReadyEvent> {
 
   override fun onApplicationEvent(event: SpringBootComponentParentReadyEvent) {
-    val builder = BeanDefinitionBuilder.rootBeanDefinition(ChainedTransactionManager::class.java)
-
     fun toPlatformTransactionManager(component: ConfigurableApplicationContext): PlatformTransactionManager? {
       if (component.getBeanNamesForType(PlatformTransactionManager::class.java).isNotEmpty()) {
         return component.getBean(PlatformTransactionManager::class.java)
@@ -37,11 +35,13 @@ class ChainedTransactionParentApplication : ApplicationListener<SpringBootCompon
       toPlatformTransactionManager(component)
     }.filter { it != null }.toTypedArray()
 
+    val builder = BeanDefinitionBuilder.genericBeanDefinition(PlatformTransactionManager::class.java) {
+      ChainedTransactionManager(*transactionManagers)
+    }
 
-    builder.addConstructorArgValue(transactionManagers)
     val beanDefinition = builder.beanDefinition
     beanDefinition.isPrimary = true
-    (event.parent as BeanDefinitionRegistry).registerBeanDefinition("chainedTransactionManager", beanDefinition)
+    (event.parent as BeanDefinitionRegistry).registerBeanDefinition("transactionManager", beanDefinition)
   }
 
 }
