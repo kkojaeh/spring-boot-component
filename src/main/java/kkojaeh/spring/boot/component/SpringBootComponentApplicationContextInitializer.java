@@ -22,10 +22,10 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
-    if (applicationContext.getParent() == null) {
+    val definition = SpringBootComponentDefinition.from(applicationContext);
+    if (definition == null) {
       return;
     }
-    val definition = SpringBootComponentDefinition.from(applicationContext);
     if (applicationContext instanceof DefaultListableBeanFactory) {
       val beanFactory = (DefaultListableBeanFactory) applicationContext;
       beanFactory.setAutowireCandidateResolver(
