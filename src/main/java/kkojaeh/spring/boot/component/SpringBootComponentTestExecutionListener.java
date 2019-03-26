@@ -13,6 +13,8 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
 
   private ConfigurableApplicationContext parent;
 
+  private static ThreadLocal<Boolean> a = new ThreadLocal<>();
+
   @Override
   public void afterTestClass(TestContext testContext) throws Exception {
     if (components != null) {
@@ -37,11 +39,11 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
   }
 
   public void beforeTestClass(TestContext testContext) throws Exception {
-
     val testComponent = testContext.getTestClass().getAnnotation(SpringBootTestComponent.class);
     if (testComponent != null) {
       val mainContext = (ConfigurableApplicationContext) testContext.getApplicationContext();
       val builder = new SpringBootComponentBuilder(testComponent.parent());
+      mainContext.setParent(null);
       builder.component(mainContext);
       for (val component : testComponent.siblings()) {
         builder.component(component);
