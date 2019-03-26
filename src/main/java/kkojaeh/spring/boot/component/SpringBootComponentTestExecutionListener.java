@@ -18,10 +18,10 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
     if (components != null) {
       val mainContext = (ConfigurableApplicationContext) testContext.getApplicationContext();
       components.forEach((type, context) -> {
-        if (!context.equals(mainContext)) {
+        //if (!context.equals(mainContext)) {
           context.stop();
           context.close();
-        }
+        //}
       });
     }
     if (parent != null) {
