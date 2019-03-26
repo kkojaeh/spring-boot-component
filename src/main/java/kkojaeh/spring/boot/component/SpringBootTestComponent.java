@@ -15,6 +15,6 @@ public @interface SpringBootTestComponent {
 
   Class<?> parent() default SpringBootComponentBuilder.NoOpParent.class;
 
-  Class<?>[] siblings();
+  Class<?>[] siblings() default {};
 
 }
