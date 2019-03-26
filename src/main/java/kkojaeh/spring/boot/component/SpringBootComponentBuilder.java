@@ -8,6 +8,8 @@ import java.util.List;
 import java.util.Map;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
+import lombok.Getter;
+import lombok.NonNull;
 import lombok.SneakyThrows;
 import lombok.val;
 import org.springframework.boot.SpringApplication;
@@ -23,19 +25,27 @@ public class SpringBootComponentBuilder {
 
   private final List<Class<?>> components = new LinkedList<>();
 
+  private final List<ConfigurableApplicationContext> componentContexts = new LinkedList<>();
+
   private Class<?> parent;
 
+  @Getter
   private ConfigurableApplicationContext parentContext;
 
   private boolean parallel = true;
 
   private int parallelSize = 10;
 
-  public SpringBootComponentBuilder component(Class<?> source) {
+  public SpringBootComponentBuilder component(@NonNull Class<?> source) {
     if (components.contains(source)) {
       throw new RuntimeException(String.format("%s is already exists", source.getName()));
     }
     components.add(source);
+    return this;
+  }
+
+  SpringBootComponentBuilder component(@NonNull ConfigurableApplicationContext context) {
+    componentContexts.add(context);
     return this;
   }
 
@@ -64,10 +74,11 @@ public class SpringBootComponentBuilder {
 
   @SneakyThrows
   public Map<Class<?>, ConfigurableApplicationContext> run(String... args) {
-    long start = System.currentTimeMillis();
     if (parentContext == null) {
       parentContext = SpringApplication.run(parent, args);
     }
+
+    componentContexts.forEach(componentContext -> componentContext.setParent(parentContext));
 
     val contexts = new HashMap<Class<?>, ConfigurableApplicationContext>();
     if (parallel) {
@@ -91,6 +102,7 @@ public class SpringBootComponentBuilder {
     }
 
     val componentSet = new HashSet<ConfigurableApplicationContext>(contexts.values());
+    componentSet.addAll(componentContexts);
     val definitions = new HashMap<SpringBootComponentDefinition, ConfigurableApplicationContext>();
     componentSet.forEach(context -> {
       val definition = SpringBootComponentDefinition.from(context);
@@ -102,18 +114,14 @@ public class SpringBootComponentBuilder {
         .filter(c -> !c.equals(context))
         .collect(Collectors.toSet());
 
-      definition.getBeans().forEach(bean -> {
-        siblings.forEach(c -> {
-          val beanFactory = c.getBeanFactory();
+      siblings.forEach(c -> {
+        val beanFactory = c.getBeanFactory();
+        definition.getBeans().forEach(bean -> {
           beanFactory.registerSingleton(
             String.format("%s/%s", definition.getName(), bean.getName()),
             bean.getInstance()
           );
         });
-        parentContext.getBeanFactory().registerSingleton(
-          String.format("%s/%s", definition.getName(), bean.getName()),
-          bean.getInstance()
-        );
       });
 
     });

@@ -17,8 +17,8 @@ import org.springframework.transaction.annotation.Transactional
 
 @ExtendWith(SpringExtension::class)
 @ComponentScan(useDefaultFilters = false)
-@SpringBootTest(classes = [ChainedTransactionParentApplication::class])
-@SpringBootTestComponent(classes = [TodoModuleApplication::class, UserModuleApplication::class])
+@SpringBootTest(classes = [TodoModuleApplication::class])
+@SpringBootTestComponent(parent = ChainedTransactionParentApplication::class, siblings = [UserModuleApplication::class])
 @Transactional
 @Rollback
 @ActiveProfiles("test")

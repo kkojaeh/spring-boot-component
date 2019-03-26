@@ -13,6 +13,8 @@ import java.lang.annotation.Target;
 @Inherited
 public @interface SpringBootTestComponent {
 
-  Class<?>[] classes();
+  Class<?> parent() default SpringBootComponentBuilder.NoOpParent.class;
+
+  Class<?>[] siblings();
 
 }

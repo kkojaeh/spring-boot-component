@@ -14,8 +14,8 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 
 @ExtendWith(SpringExtension::class)
 @ComponentScan(useDefaultFilters = false)
-@SpringBootTest(classes = [OneDataSourceParentApplication::class])
-@SpringBootTestComponent(classes = [TodoModuleApplication::class, UserModuleApplication::class])
+@SpringBootTest(classes = [TodoModuleApplication::class])
+@SpringBootTestComponent(parent = OneDataSourceParentApplication::class, siblings = [UserModuleApplication::class])
 class OneDataSourceApplicationTests {
 
   @Take
