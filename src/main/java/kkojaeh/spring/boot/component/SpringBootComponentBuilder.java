@@ -6,6 +6,7 @@ import java.util.HashSet;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.Collectors;
 import lombok.Getter;
@@ -25,7 +26,8 @@ public class SpringBootComponentBuilder {
 
   private final List<Class<?>> components = new LinkedList<>();
 
-  private final List<ConfigurableApplicationContext> componentContexts = new LinkedList<>();
+  @Getter
+  private final Set<ConfigurableApplicationContext> componentContexts = new HashSet<>();
 
   private Class<?> parent;
 
@@ -100,9 +102,8 @@ public class SpringBootComponentBuilder {
             .run(args))
       );
     }
-
-    val componentSet = new HashSet<ConfigurableApplicationContext>(contexts.values());
-    componentSet.addAll(componentContexts);
+    componentContexts.addAll(contexts.values());
+    val componentSet = new HashSet<ConfigurableApplicationContext>(componentContexts);
     val definitions = new HashMap<SpringBootComponentDefinition, ConfigurableApplicationContext>();
     componentSet.forEach(context -> {
       val definition = SpringBootComponentDefinition.from(context);
