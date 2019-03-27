@@ -85,11 +85,6 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
     @Override
     public void onApplicationEvent(ApplicationStartedEvent event) {
       val applicationContext = event.getApplicationContext();
-      val parentContext = (ConfigurableApplicationContext) applicationContext
-        .getParent();
-      if (parentContext == null) {
-        return;
-      }
       val beanFactory = applicationContext.getBeanFactory();
 
       Stream.concat(
@@ -112,9 +107,6 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
           bean = ProxyFactory.getProxy(new SingletonTargetSource(bean));
         }
         definition.addBean(name, bean);
-        /*
-        parentContext.getBeanFactory()
-          .registerSingleton(String.format("%s/%s", definition.getName(), name), bean);*/
       });
 
       applicationContext.getBean(ApplicationEventMulticaster.class)
