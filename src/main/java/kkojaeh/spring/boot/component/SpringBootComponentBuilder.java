@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.ForkJoinPool;
+import java.util.function.Consumer;
 import java.util.stream.Collectors;
 import lombok.Getter;
 import lombok.NonNull;
@@ -29,6 +30,9 @@ public class SpringBootComponentBuilder {
   @Getter
   private final Set<ConfigurableApplicationContext> componentContexts = new HashSet<>();
 
+  @Getter
+  private final Map<Class<?>, Consumer<SpringApplicationBuilder>> consumers = new HashMap<>();
+
   private Class<?> parent;
 
   @Getter
@@ -39,10 +43,17 @@ public class SpringBootComponentBuilder {
   private int parallelSize = 10;
 
   public SpringBootComponentBuilder component(@NonNull Class<?> source) {
+    return component(source, (builder) -> {
+    });
+  }
+
+  public SpringBootComponentBuilder component(@NonNull Class<?> source,
+    @NonNull Consumer<SpringApplicationBuilder> consumer) {
     if (components.contains(source)) {
       throw new RuntimeException(String.format("%s is already exists", source.getName()));
     }
     components.add(source);
+    consumers.put(source, consumer);
     return this;
   }
 
@@ -87,20 +98,24 @@ public class SpringBootComponentBuilder {
       ForkJoinPool forkjoinPool = new ForkJoinPool(parallelSize);
       forkjoinPool.submit(() -> {
         components.parallelStream()
-          .forEach(component ->
-            contexts.put(component,
-              new SpringApplicationBuilder(component)
-                .parent(parentContext)
-                .run(args))
-          );
+          .forEach(component -> {
+            val builder = new SpringApplicationBuilder(component)
+              .parent(parentContext);
+            if (consumers.containsKey(component)) {
+              consumers.get(component).accept(builder);
+            }
+            contexts.put(component, builder.run(args));
+          });
       }).get();
     } else {
-      components.forEach(component ->
-        contexts.put(component,
-          new SpringApplicationBuilder(component)
-            .parent(parentContext)
-            .run(args))
-      );
+      components.forEach(component -> {
+        val builder = new SpringApplicationBuilder(component)
+          .parent(parentContext);
+        if (consumers.containsKey(component)) {
+          consumers.get(component).accept(builder);
+        }
+        contexts.put(component, builder.run(args));
+      });
     }
     componentContexts.addAll(contexts.values());
     val componentSet = new HashSet<ConfigurableApplicationContext>(componentContexts);
