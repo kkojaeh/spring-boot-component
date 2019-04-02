@@ -1,5 +1,6 @@
 package kkojaeh.spring.boot.component;
 
+import java.util.Collection;
 import java.util.stream.Stream;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
@@ -15,10 +16,12 @@ import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.context.annotation.ContextAnnotationAutowireCandidateResolver;
 import org.springframework.context.event.ApplicationEventMulticaster;
 import org.springframework.context.support.GenericApplicationContext;
+import org.springframework.core.ResolvableType;
 import org.springframework.core.annotation.AnnotationUtils;
 import org.springframework.core.type.MethodMetadata;
 
-public class SpringBootComponentApplicationContextInitializer implements ApplicationContextInitializer {
+public class SpringBootComponentApplicationContextInitializer implements
+  ApplicationContextInitializer {
 
   @Override
   public void initialize(ConfigurableApplicationContext applicationContext) {
@@ -46,6 +49,31 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
     @NonNull
     private final SpringBootComponentDefinition definition;
 
+    private void addTake(DependencyDescriptor descriptor) {
+
+      final Class<?> type = descriptor.getDependencyType();
+
+      if (type.isArray()) {
+        Class<?> componentType = type.getComponentType();
+        ResolvableType resolvableType = descriptor.getResolvableType();
+        Class<?> resolvedArrayType = resolvableType.resolve(type);
+        if (resolvedArrayType != type) {
+          componentType = resolvableType.getComponentType().resolve();
+        }
+        if (componentType != null) {
+          definition.addTake(componentType);
+        }
+      } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
+        Class<?> elementType = descriptor.getResolvableType().asCollection().resolveGeneric();
+        if (elementType != null) {
+          definition.addTake(elementType);
+        }
+
+      } else {
+        definition.addTake(type);
+      }
+    }
+
     @Override
     protected boolean isLazy(DependencyDescriptor descriptor) {
       boolean lazy = super.isLazy(descriptor);
@@ -53,7 +81,7 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
         for (val ann : descriptor.getAnnotations()) {
           val take = AnnotationUtils.getAnnotation(ann, Take.class);
           if (take != null && take.required()) {
-            definition.addTake(descriptor.getDependencyType());
+            addTake(descriptor);
             return true;
           }
         }
@@ -64,7 +92,7 @@ public class SpringBootComponentApplicationContextInitializer implements Applica
             val take = AnnotationUtils
               .getAnnotation(methodParam.getAnnotatedElement(), Take.class);
             if (take != null && take.required()) {
-              definition.addTake(descriptor.getDependencyType());
+              addTake(descriptor);
               return true;
             }
           }
