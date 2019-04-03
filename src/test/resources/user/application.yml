@@ -2,6 +2,8 @@ user:
   name: mixer
 
 spring:
+  jmx:
+    default-domain: user
   banner:
     location: classpath:user/banner.txt
   messages:

@@ -1,6 +1,8 @@
 todo: job 1
 
 spring:
+  jmx:
+    default-domain: todo
   banner:
     location: classpath:todo/banner.txt
   messages:

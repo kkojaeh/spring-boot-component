@@ -88,7 +88,7 @@ public class SpringBootComponentDefinition {
     outer:
     while (!targets.isEmpty()) {
       for (SpringBootComponentDefinition target : targets) {
-        val hasDependency = dependencies.get(target.getName())
+        val hasDependency = dependencies.get(target)
           .stream()
           .anyMatch(dependency -> targets.stream().anyMatch(t -> t.equals(dependency)));
         if (!hasDependency) {

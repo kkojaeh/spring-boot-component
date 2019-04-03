@@ -23,15 +23,16 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
     val testComponent = testContext.getTestClass().getAnnotation(SpringBootTestComponent.class);
     if (testComponent != null) {
       val previous = currentComponent.get();
+      val builder = currentBuilder.get();
       if (previous != null) {
         if (previous.equals(testComponent)) {
           return;
-        } else {
+        } else if (builder != null) {
           testContext.markApplicationContextDirty(HierarchyMode.CURRENT_LEVEL);
           testContext
             .setAttribute(DependencyInjectionTestExecutionListener.REINJECT_DEPENDENCIES_ATTRIBUTE,
               Boolean.TRUE);
-          val builder = currentBuilder.get();
+
           builder.getComponentContexts().forEach(context -> {
             context.stop();
             context.close();
@@ -42,14 +43,14 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
       }
       currentComponent.set(testComponent);
       val mainContext = (ConfigurableApplicationContext) testContext.getApplicationContext();
-      val builder = new SpringBootComponentBuilder(testComponent.parent());
+      val newBuilder = new SpringBootComponentBuilder(testComponent.parent());
       mainContext.setParent(null);
-      builder.component(mainContext);
+      newBuilder.component(mainContext);
       for (val component : testComponent.siblings()) {
-        builder.component(component);
+        newBuilder.component(component);
       }
-      builder.run();
-      currentBuilder.set(builder);
+      newBuilder.run();
+      currentBuilder.set(newBuilder);
     }
   }
 }
