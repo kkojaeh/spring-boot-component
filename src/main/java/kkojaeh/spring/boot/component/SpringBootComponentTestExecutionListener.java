@@ -1,6 +1,9 @@
 package kkojaeh.spring.boot.component;
 
+import java.util.Arrays;
+import java.util.HashSet;
 import lombok.val;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.context.ConfigurableApplicationContext;
 import org.springframework.core.Ordered;
 import org.springframework.test.annotation.DirtiesContext.HierarchyMode;
@@ -42,11 +45,18 @@ public class SpringBootComponentTestExecutionListener implements TestExecutionLi
         }
       }
       currentComponent.set(testComponent);
+      val bootTest = testContext.getTestClass().getAnnotation(SpringBootTest.class);
       val mainContext = (ConfigurableApplicationContext) testContext.getApplicationContext();
+
       val newBuilder = new SpringBootComponentBuilder(testComponent.parent());
       mainContext.setParent(null);
       newBuilder.component(mainContext);
-      for (val component : testComponent.siblings()) {
+      val classes = new HashSet<Class<?>>();
+      classes.addAll(Arrays.asList(testComponent.siblings()));
+      val supplier = testComponent.siblingsSupplier().newInstance();
+      classes.addAll(Arrays.asList(supplier.get()));
+      classes.removeAll(Arrays.asList(bootTest.classes()));
+      for (val component : classes) {
         newBuilder.component(component);
       }
       newBuilder.run();
