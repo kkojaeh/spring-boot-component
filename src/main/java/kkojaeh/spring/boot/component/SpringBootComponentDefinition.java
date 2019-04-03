@@ -8,11 +8,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+import lombok.Builder;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
-import lombok.Value;
 import lombok.val;
 import org.springframework.boot.context.config.ConfigFileApplicationListener;
 import org.springframework.context.ConfigurableApplicationContext;
@@ -29,12 +29,10 @@ public class SpringBootComponentDefinition {
   @Getter
   private final String name;
 
-  private final Set<Class<?>> takes = new HashSet<>();
-
-  private final Set<Class<?>> gives = new HashSet<>();
+  private final Set<Class<?>> consumers = new HashSet<>();
 
   @Getter
-  private final Set<Bean> beans = new HashSet<>();
+  private final Set<ComponentBean> componentBeans = new HashSet<>();
 
   public static SpringBootComponentDefinition from(ConfigurableApplicationContext context) {
     return context.getEnvironment()
@@ -46,39 +44,43 @@ public class SpringBootComponentDefinition {
     val result = new LinkedList<SpringBootComponentDefinition>();
     val targets = new LinkedList<SpringBootComponentDefinition>(definitions);
 
-    val gives = new HashMap<Class<?>, Set<SpringBootComponentDefinition>>();
-    val takes = new HashSet<Class<?>>();
+    val providers = new HashMap<Class<?>, Set<SpringBootComponentDefinition>>();
+    val consumers = new HashSet<Class<?>>();
     val dependencies = new HashMap<SpringBootComponentDefinition, Set<SpringBootComponentDefinition>>();
 
     definitions.forEach(definition -> {
       dependencies.put(definition, new HashSet<>());
-      takes.addAll(definition.takes);
-      definition.gives.forEach(give -> {
-        if (!gives.containsKey(give)) {
-          gives.put(give, new HashSet<>());
+      consumers.addAll(definition.consumers);
+      definition.componentBeans.forEach(bean -> {
+        val type = bean.getType();
+        if (!providers.containsKey(type)) {
+          providers.put(type, new HashSet<>());
         }
-        gives.get(give).add(definition);
+        if (bean.isHost()) {
+          providers.get(type).add(definition);
+        }
       });
 
     });
 
-    gives.forEach((give, set) -> {
-      takes.removeAll(
-        takes.stream().filter(take -> take.isAssignableFrom(give))
+    providers.forEach((provider, set) -> {
+      consumers.removeAll(
+        consumers.stream().filter(consumer -> consumer.isAssignableFrom(provider))
           .collect(Collectors.toSet())
       );
       definitions.forEach(definition -> {
-        val dependOn = definition.takes.stream().anyMatch(take -> take.isAssignableFrom(give));
+        val dependOn = definition.consumers.stream()
+          .anyMatch(autowired -> autowired.isAssignableFrom(provider));
         if (dependOn) {
           dependencies.get(definition).addAll(set);
         }
       });
     });
 
-    if (!takes.isEmpty()) {
-      throw new RuntimeException("cannot find giver for: " +
-        takes.stream()
-          .map(take -> take.getName())
+    if (!consumers.isEmpty()) {
+      throw new RuntimeException("cannot find bean for: " +
+        consumers.stream()
+          .map(consumer -> consumer.getName())
           .collect(Collectors.joining(", "))
       );
     }
@@ -86,7 +88,7 @@ public class SpringBootComponentDefinition {
     outer:
     while (!targets.isEmpty()) {
       for (SpringBootComponentDefinition target : targets) {
-        val hasDependency = dependencies.get(target)
+        val hasDependency = dependencies.get(target.getName())
           .stream()
           .anyMatch(dependency -> targets.stream().anyMatch(t -> t.equals(dependency)));
         if (!hasDependency) {
@@ -100,16 +102,12 @@ public class SpringBootComponentDefinition {
     return result;
   }
 
-  public void addGive(Class<?> give) {
-    gives.add(give);
+  public void addBean(ComponentBean bean) {
+    componentBeans.add(bean);
   }
 
-  public void addTake(Class<?> take) {
-    takes.add(take);
-  }
-
-  public void addBean(String name, Object instance) {
-    beans.add(new Bean(name, instance));
+  public void addConsumer(Class<?> consumer) {
+    consumers.add(consumer);
   }
 
   public void to(ConfigurableEnvironment environment) {
@@ -123,8 +121,13 @@ public class SpringBootComponentDefinition {
 
   }
 
-  @Value
-  public static class Bean {
+  @Builder
+  @Getter
+  public static class ComponentBean {
+
+    Class<?> type;
+
+    boolean host;
 
     String name;
 

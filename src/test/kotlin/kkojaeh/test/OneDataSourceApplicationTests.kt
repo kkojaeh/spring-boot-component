@@ -1,8 +1,8 @@
 package kkojaeh.test
 
 import kkojaeh.parent.onedatasource.OneDataSourceParentApplication
+import kkojaeh.spring.boot.component.ComponentAutowired
 import kkojaeh.spring.boot.component.SpringBootTestComponent
-import kkojaeh.spring.boot.component.Take
 import kkojaeh.todo.TodoModuleApplication
 import kkojaeh.todo.TodoService
 import kkojaeh.user.UserModuleApplication
@@ -18,7 +18,7 @@ import org.springframework.test.context.junit.jupiter.SpringExtension
 @SpringBootTestComponent(parent = OneDataSourceParentApplication::class, siblings = [UserModuleApplication::class])
 class OneDataSourceApplicationTests {
 
-  @Take
+  @ComponentAutowired
   lateinit var todoService: TodoService
 
   @Test

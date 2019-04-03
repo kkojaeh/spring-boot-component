@@ -1,8 +1,8 @@
 package kkojaeh.test
 
 import kkojaeh.parent.chainedtransaction.ChainedTransactionParentApplication
+import kkojaeh.spring.boot.component.ComponentAutowired
 import kkojaeh.spring.boot.component.SpringBootTestComponent
-import kkojaeh.spring.boot.component.Take
 import kkojaeh.todo.TodoModuleApplication
 import kkojaeh.todo.TodoService
 import kkojaeh.user.UserModuleApplication
@@ -24,7 +24,7 @@ import org.springframework.transaction.annotation.Transactional
 @ActiveProfiles("test")
 class ChainedTransactionApplicationTests {
 
-  @Take
+  @ComponentAutowired
   lateinit var todoService: TodoService
 
   @Test

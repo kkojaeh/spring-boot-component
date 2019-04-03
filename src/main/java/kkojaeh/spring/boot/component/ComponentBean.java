@@ -7,6 +7,7 @@ import java.lang.annotation.Target;
 
 @Target({ElementType.TYPE, ElementType.METHOD})
 @Retention(RetentionPolicy.RUNTIME)
-public @interface Give {
+public @interface ComponentBean {
 
+  boolean host() default true;
 }

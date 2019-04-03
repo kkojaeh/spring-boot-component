@@ -1,7 +1,7 @@
 package kkojaeh.todo
 
-import kkojaeh.spring.boot.component.Give
-import kkojaeh.spring.boot.component.Take
+import kkojaeh.spring.boot.component.ComponentAutowired
+import kkojaeh.spring.boot.component.ComponentBean
 import kkojaeh.user.UserService
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
@@ -11,11 +11,11 @@ import javax.persistence.EntityManager
 import javax.persistence.PersistenceContext
 import javax.sql.DataSource
 
-@Give
+@ComponentBean
 @Service
 @Transactional
 class TodoService(
-  @Take val userService: UserService,
+  @ComponentAutowired val userService: UserService,
   @Autowired val dataSource: DataSource,
   @PersistenceContext val entityManager: EntityManager,
   @Value("\${todo}") val todo: String) {

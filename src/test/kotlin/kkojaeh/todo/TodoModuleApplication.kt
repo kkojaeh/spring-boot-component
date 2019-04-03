@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 class TodoModuleApplication{
 
   /*@Primary
-  @Bean
+  @ComponentBean
   @ConditionalOnBean(DataSource::class)
   fun delegateDataSource(dataSource: DataSource): DelegateDataSource {
     return DelegateDataSource(dataSource)

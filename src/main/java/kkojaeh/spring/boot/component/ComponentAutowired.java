@@ -11,7 +11,7 @@ import org.springframework.context.annotation.Lazy;
 @Retention(RetentionPolicy.RUNTIME)
 @Lazy
 @Autowired
-public @interface Take {
+public @interface ComponentAutowired {
 
   boolean required() default true;
 

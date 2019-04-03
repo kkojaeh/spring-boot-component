@@ -132,7 +132,7 @@ public class SpringBootComponentBuilder {
 
       siblings.forEach(c -> {
         val beanFactory = c.getBeanFactory();
-        definition.getBeans().forEach(bean -> {
+        definition.getComponentBeans().forEach(bean -> {
           beanFactory.registerSingleton(
             String.format("%s/%s", definition.getName(), bean.getName()),
             bean.getInstance()

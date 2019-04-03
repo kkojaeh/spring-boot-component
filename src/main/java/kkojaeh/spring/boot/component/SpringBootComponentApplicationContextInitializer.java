@@ -1,12 +1,13 @@
 package kkojaeh.spring.boot.component;
 
 import java.util.Collection;
-import java.util.stream.Stream;
+import java.util.Map;
 import lombok.NonNull;
 import lombok.RequiredArgsConstructor;
 import lombok.val;
 import org.springframework.aop.framework.ProxyFactory;
 import org.springframework.aop.target.SingletonTargetSource;
+import org.springframework.beans.factory.annotation.AnnotatedBeanDefinition;
 import org.springframework.beans.factory.config.DependencyDescriptor;
 import org.springframework.beans.factory.support.DefaultListableBeanFactory;
 import org.springframework.boot.context.event.ApplicationStartedEvent;
@@ -32,24 +33,25 @@ public class SpringBootComponentApplicationContextInitializer implements
     if (applicationContext instanceof DefaultListableBeanFactory) {
       val beanFactory = (DefaultListableBeanFactory) applicationContext;
       beanFactory.setAutowireCandidateResolver(
-        new TakeContextAnnotationAutowireCandidateResolver(definition));
+        new ComponentAutowiredContextAnnotationAutowireCandidateResolver(definition));
     } else if (applicationContext instanceof GenericApplicationContext) {
       val beanFactory = ((GenericApplicationContext) applicationContext)
         .getDefaultListableBeanFactory();
       beanFactory.setAutowireCandidateResolver(
-        new TakeContextAnnotationAutowireCandidateResolver(definition));
+        new ComponentAutowiredContextAnnotationAutowireCandidateResolver(definition));
     }
-    applicationContext.addApplicationListener(new GaveBeanDetectApplicationListener(definition));
+    applicationContext
+      .addApplicationListener(new ComponentBeanDetectApplicationListener(definition));
   }
 
   @RequiredArgsConstructor
-  private static class TakeContextAnnotationAutowireCandidateResolver extends
+  private static class ComponentAutowiredContextAnnotationAutowireCandidateResolver extends
     ContextAnnotationAutowireCandidateResolver {
 
     @NonNull
     private final SpringBootComponentDefinition definition;
 
-    private void addTake(DependencyDescriptor descriptor) {
+    private void addComponentAutowired(DependencyDescriptor descriptor) {
 
       final Class<?> type = descriptor.getDependencyType();
 
@@ -61,16 +63,16 @@ public class SpringBootComponentApplicationContextInitializer implements
           componentType = resolvableType.getComponentType().resolve();
         }
         if (componentType != null) {
-          definition.addTake(componentType);
+          definition.addConsumer(componentType);
         }
       } else if (Collection.class.isAssignableFrom(type) && type.isInterface()) {
         Class<?> elementType = descriptor.getResolvableType().asCollection().resolveGeneric();
         if (elementType != null) {
-          definition.addTake(elementType);
+          definition.addConsumer(elementType);
         }
 
       } else {
-        definition.addTake(type);
+        definition.addConsumer(type);
       }
     }
 
@@ -79,9 +81,9 @@ public class SpringBootComponentApplicationContextInitializer implements
       boolean lazy = super.isLazy(descriptor);
       if (lazy) {
         for (val ann : descriptor.getAnnotations()) {
-          val take = AnnotationUtils.getAnnotation(ann, Take.class);
-          if (take != null && take.required()) {
-            addTake(descriptor);
+          val autowired = AnnotationUtils.getAnnotation(ann, ComponentAutowired.class);
+          if (autowired != null && autowired.required()) {
+            addComponentAutowired(descriptor);
             return true;
           }
         }
@@ -89,10 +91,10 @@ public class SpringBootComponentApplicationContextInitializer implements
         if (methodParam != null) {
           val method = methodParam.getMethod();
           if (method == null || void.class == method.getReturnType()) {
-            val take = AnnotationUtils
-              .getAnnotation(methodParam.getAnnotatedElement(), Take.class);
-            if (take != null && take.required()) {
-              addTake(descriptor);
+            val autowired = AnnotationUtils
+              .getAnnotation(methodParam.getAnnotatedElement(), ComponentAutowired.class);
+            if (autowired != null && autowired.required()) {
+              addComponentAutowired(descriptor);
               return true;
             }
           }
@@ -104,8 +106,10 @@ public class SpringBootComponentApplicationContextInitializer implements
   }
 
   @RequiredArgsConstructor
-  public class GaveBeanDetectApplicationListener implements
+  private static class ComponentBeanDetectApplicationListener implements
     ApplicationListener<ApplicationStartedEvent> {
+
+    private static final String ANNOTATION_NAME = ComponentBean.class.getName();
 
     @NonNull
     private final SpringBootComponentDefinition definition;
@@ -115,28 +119,40 @@ public class SpringBootComponentApplicationContextInitializer implements
       val applicationContext = event.getApplicationContext();
       val beanFactory = applicationContext.getBeanFactory();
 
-      Stream.concat(
-        Stream.of(beanFactory.getBeanDefinitionNames())
-          .filter(beanDefinitionName -> {
-            val beanDefinition = beanFactory
-              .getBeanDefinition(beanDefinitionName);
-
-            if (beanDefinition.getSource() instanceof MethodMetadata) {
-              return ((MethodMetadata) beanDefinition.getSource())
-                .isAnnotated(Give.class.getName());
-            }
-            return false;
-          }),
-        Stream.of(beanFactory.getBeanNamesForAnnotation(Give.class))
-      ).forEach(name -> {
-        Object bean = beanFactory.getBean(name);
-        definition.addGive(bean.getClass());
-        if (!bean.getClass().isEnum()) {
-          bean = ProxyFactory.getProxy(new SingletonTargetSource(bean));
+      for (String beanDefinitionName : beanFactory.getBeanDefinitionNames()) {
+        val beanDefinition = beanFactory
+          .getBeanDefinition(beanDefinitionName);
+        Map<String, Object> attributes = null;
+        if (beanDefinition.getSource() instanceof MethodMetadata) {
+          val metadata = (MethodMetadata) beanDefinition.getSource();
+          if (metadata.isAnnotated(ANNOTATION_NAME)) {
+            attributes = metadata.getAnnotationAttributes(ANNOTATION_NAME);
+          }
         }
-        definition.addBean(name, bean);
-      });
+        if (beanDefinition instanceof AnnotatedBeanDefinition) {
+          val metadata = ((AnnotatedBeanDefinition) beanDefinition).getMetadata();
+          if (metadata.hasAnnotation(ANNOTATION_NAME)) {
+            attributes = metadata.getAnnotationAttributes(ANNOTATION_NAME);
+          }
+        }
 
+        if (attributes != null) {
+          val host = Boolean.TRUE.equals(attributes.get("host"));
+          Object bean = beanFactory.getBean(beanDefinitionName);
+          Class<?> type = bean.getClass();
+          if (!bean.getClass().isEnum()) {
+            bean = ProxyFactory.getProxy(new SingletonTargetSource(bean));
+          }
+          definition.addBean(
+            SpringBootComponentDefinition.ComponentBean.builder()
+              .type(type)
+              .host(host)
+              .name(beanDefinitionName)
+              .instance(bean)
+              .build()
+          );
+        }
+      }
       applicationContext.getBean(ApplicationEventMulticaster.class)
         .removeApplicationListener(this);
     }

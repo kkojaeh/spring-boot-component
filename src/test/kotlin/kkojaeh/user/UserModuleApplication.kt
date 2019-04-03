@@ -17,7 +17,7 @@ import org.springframework.transaction.annotation.EnableTransactionManagement
 class UserModuleApplication {
 
   /*@Primary
-  @Bean
+  @ComponentBean
   @ConditionalOnBean(DataSource::class)
   fun delegateDataSource(dataSource: DataSource): DataSource {
     return DelegateDataSource(dataSource)
